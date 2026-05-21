@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nested Tic-Tac-Toe</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f4f5f7;--card:#ffffff;--border:#d9dde3;
+  --text:#1f2937;--muted:#667085;
+  --x:#1f5bd7;--o:#d62f2f;--green:#22a447;
+  --purple:#8b5cf6;--gold:#f2b01e;--cyan:#06b6d4;--orange:#f59e0b;
+}
+body{background:var(--bg);font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);
+  display:flex;flex-direction:column;min-height:100vh;}
+
+/* ── Header ── */
+.hdr{background:var(--card);border:1px solid var(--border);margin:8px 8px 6px;
+  display:grid;grid-template-columns:1fr auto 1fr;gap:8px;padding:8px 14px;border-radius:4px;}
+.pbanner{display:flex;align-items:center;gap:10px;}
+.pbanner.right{justify-content:flex-end;}
+.psym{font-size:32px;font-weight:700;line-height:1;}
+.pname{font-size:13px;font-weight:700;}
+.psub{font-size:10px;color:var(--text);}
+.cwrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;}
+.tbadge{color:#fff;font-size:12px;font-weight:700;padding:4px 16px;border-radius:4px;white-space:nowrap;}
+.tmsg{font-size:10px;color:#536173;text-align:center;}
+
+/* ── Body ── */
+.body{display:flex;flex:1;gap:8px;padding:0 8px;}
+.lcol{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+canvas#board{border:1px solid var(--border);background:#fff;cursor:pointer;display:block;}
+
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:4px;}
+.ctitle{font-size:10px;font-weight:700;color:#334155;padding:8px 10px 4px;}
+.cbody{padding:0 10px 8px;}
+
+.legend{display:flex;justify-content:space-around;padding:6px 4px;flex-wrap:wrap;gap:4px;}
+.litem{display:flex;align-items:center;gap:3px;font-size:9px;color:var(--muted);}
+.ldot{font-size:13px;font-weight:700;line-height:1;}
+
+.guide{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:6px 10px;}
+.gtitle{font-size:10px;font-weight:700;color:#b45309;margin-bottom:5px;}
+.gline{display:flex;align-items:flex-start;gap:6px;margin-bottom:4px;font-size:8px;color:var(--text);}
+.gnum{background:#dbeafe;color:#1d4ed8;font-weight:700;font-size:9px;
+  width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:2px;}
+
+.bcards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+
+/* ── Sidebar ── */
+.sbwrap{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px;max-height:calc(100vh - 180px);}
+
+/* ── Buttons ── */
+.btn{background:#fff;border:1px solid #d1d5db;border-radius:4px;padding:5px 8px;
+  font-family:inherit;font-size:9px;cursor:pointer;width:100%;text-align:center;transition:background .12s;}
+.btn:hover{background:#f3f4f6;}
+.btn.active{background:#dbeafe;border-color:#93c5fd;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn.bold{font-weight:700;}
+.brow{display:flex;gap:4px;margin-bottom:5px;}
+.brow .btn{flex:1;}
+.slabel{font-size:9px;font-weight:700;color:var(--text);margin:6px 0 2px;display:block;}
+.stlabel{font-size:10px;font-weight:700;display:block;margin-bottom:3px;}
+.ssub{font-size:8px;color:var(--muted);margin-top:6px;}
+
+.trow{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:9px;}
+.trow input{width:62px;font-family:inherit;font-size:9px;border:1px solid #d1d5db;
+  border-radius:4px;padding:3px 6px;}
+
+.streak-row{display:flex;gap:6px;margin-bottom:8px;}
+.sx{font-size:11px;font-weight:700;color:var(--x);flex:1;}
+.so{font-size:11px;font-weight:700;color:var(--o);flex:1;}
+
+/* ── Footer ── */
+.footer{background:#eaf1ff;border:1px solid #c9d8ff;margin:0 8px 8px;
+  padding:5px 12px;border-radius:4px;font-size:9px;font-weight:700;color:#1f4fbf;}
+
+/* ── Modal ── */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+  z-index:1000;align-items:center;justify-content:center;}
+.moverlay.show{display:flex;}
+.modal{background:#fff;border-radius:8px;padding:24px;max-width:460px;width:90%;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.modal h2{font-size:17px;margin-bottom:12px;}
+.modal p,.modal li{font-size:13px;color:#374151;margin-bottom:7px;line-height:1.5;}
+.modal ul{padding-left:18px;}
+.mbtns{display:flex;gap:8px;margin-top:18px;}
+.mbtn{flex:1;padding:10px;border-radius:6px;border:1px solid #d1d5db;
+  font-family:inherit;font-size:13px;cursor:pointer;font-weight:600;}
+.mbtn.yes{background:var(--x);color:#fff;border-color:var(--x);}
+.mbtn.no{background:#fff;color:var(--text);}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="pbanner">
+    <div class="psym" style="color:var(--x)">X</div>
+    <div><div class="pname" style="color:var(--x)">Player X</div><div class="psub" id="xSub">(You)</div></div>
+  </div>
+  <div class="cwrap">
+    <div class="tbadge" id="turnBadge">YOUR TURN</div>
+    <div class="tmsg" id="turnMsg">Choose any unlocked small board to play</div>
+  </div>
+  <div class="pbanner right">
+    <div style="text-align:right">
+      <div class="pname" style="color:var(--o)" id="oTitle">Player O</div>
+      <div class="psub" id="oSub">(Player 2)</div>
+    </div>
+    <div class="psym" style="color:var(--o)">O</div>
+  </div>
+</div>
+
+<!-- Body -->
+<div class="body">
+  <!-- Left column -->
+  <div class="lcol">
+    <canvas id="board"></canvas>
+
+    <div class="card legend">
+      <div class="litem"><span class="ldot" style="color:var(--x)">■</span> You / X</div>
+      <div class="litem"><span class="ldot" style="color:var(--o)">■</span> Opponent / O</div>
+      <div class="litem"><span class="ldot" style="color:#c7ccd4">■</span> Locked</div>
+      <div class="litem"><span class="ldot" style="color:var(--purple)">■</span> Selected</div>
+      <div class="litem"><span class="ldot" style="color:var(--gold)">■</span> Win Line</div>
+    </div>
+
+    <div class="guide">
+      <div class="gtitle">HOW TO PLAY (QUICK GUIDE)</div>
+      <div class="gline"><div class="gnum">1</div><div>Play in any unlocked small board.</div></div>
+      <div class="gline"><div class="gnum">2</div><div>Win the small board to claim that cell in the middle board.</div></div>
+      <div class="gline"><div class="gnum">3</div><div>Win 3 middle boards in a row to win the match.</div></div>
+      <div class="gline"><div class="gnum">4</div><div>Drawn boards restart automatically until someone wins.</div></div>
+    </div>
+
+    <div class="bcards">
+      <div class="card"><div class="ctitle">WIN STREAK TRACKER</div>
+        <div class="cbody">
+          <div class="streak-row"><span class="sx" id="streakX">X Streak: 0</span><span class="so" id="streakO">O Streak: 0</span></div>
+          <button class="btn" onclick="resetStreaks()">Reset Streaks</button>
+        </div>
+      </div>
+      <div class="card"><div class="ctitle">SOUND &amp; HELP</div>
+        <div class="cbody">
+          <button class="btn" id="soundBtn" onclick="toggleSound()" style="margin-bottom:5px">Sound: ON</button>
+          <button class="btn" id="animBtn" onclick="toggleAnimations()" style="margin-bottom:5px">Animations: ON</button>
+          <button class="btn" onclick="showRules()">Rules &amp; Help</button>
+        </div>
+      </div>
+      <div class="card"><div class="ctitle">GAME PROGRESS</div>
+        <div class="cbody">
+          <div class="stlabel" id="smallClaims">Small: 0 / 81</div>
+          <div class="stlabel" id="middleClaims">Middle: 0 / 9</div>
+          <div class="stlabel" id="bigClaim">Big: 0 / 1</div>
+          <div class="ssub">Win 3 middle boards in a row.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sbwrap">
+    <div class="card"><div class="ctitle">LIVE TIPS &amp; ASSISTANT</div>
+      <div class="cbody">
+        <div id="bestLbl" style="font-size:10px;font-weight:700;color:var(--x);margin-bottom:5px">Best Move: —</div>
+        <div id="blockLbl" style="font-size:10px;font-weight:700;color:#b45309;margin-bottom:5px">Block Here!: No immediate threat.</div>
+        <div id="tipLbl" style="font-size:10px;font-weight:700;color:#166534;margin-bottom:4px">Strategy Tip: —</div>
+        <div style="font-size:8px;color:var(--muted);text-align:center">Cyan cell = recommended move. Orange = block urgently.</div>
+      </div>
+    </div>
+
+    <div class="card"><div class="ctitle">GAME STATUS</div>
+      <div class="cbody">
+        <div class="stlabel" id="statusTurn">Turn: X</div>
+        <div class="stlabel" id="statusTimer">Timer: 20s / 20s</div>
+        <div style="font-size:9px;margin-bottom:3px" id="statusCounts">Hints: 3   Undos: 3</div>
+        <div style="font-size:9px;margin-bottom:3px" id="statusScore">Score — X: 0   O: 0</div>
+        <div style="font-size:8px;color:var(--muted)" id="statusMode">Mode: 2 Players | Difficulty: Intermediate</div>
+      </div>
+    </div>
+
+    <div class="card"><div class="ctitle">GAME CONTROLS</div>
+      <div class="cbody">
+        <span class="slabel">GAME MODE</span>
+        <div class="brow">
+          <button class="btn active" id="mode2p" onclick="setMode('2P')">2 Players</button>
+          <button class="btn" id="modeCpu" onclick="setMode('CPU')">Vs Computer</button>
+        </div>
+        <span class="slabel">COMPUTER DIFFICULTY</span>
+        <div class="brow">
+          <button class="btn" id="diffBeg" onclick="setDifficulty('Beginner')">Beginner</button>
+          <button class="btn active" id="diffInt" onclick="setDifficulty('Intermediate')">Intermediate</button>
+        </div>
+        <button class="btn" id="diffAdv" onclick="setDifficulty('Advanced')" style="margin-bottom:6px">Advanced</button>
+        <span class="slabel">TURN TIMER</span>
+        <div class="trow"><span>Seconds:</span><input type="number" id="timerInput" value="20" min="5" max="120"></div>
+        <div class="brow" style="margin-bottom:6px">
+          <button class="btn" id="pauseBtn" onclick="togglePauseTimer()">Pause Timer</button>
+          <button class="btn" onclick="resetTurnTimer()">Reset Timer</button>
+        </div>
+        <span class="slabel">TOOLS</span>
+        <button class="btn bold" onclick="newMatch()" style="margin-bottom:5px">New Match</button>
+        <button class="btn" id="undoBtn" onclick="undo()" style="margin-bottom:5px">Undo (3 left)</button>
+        <button class="btn" id="hintBtn" onclick="hint()">Hint (3 left)</button>
+      </div>
+    </div>
+
+    <div class="card"><div class="ctitle">PROGRESS (SIDEBAR)</div>
+      <div class="cbody">
+        <div class="stlabel" id="progSmall">Small Games: 0 / 81</div>
+        <div class="stlabel" id="progMiddle">Middle Games: 0 / 9</div>
+        <div class="stlabel" id="progBig">Big Game: 0 / 1</div>
+        <div class="ssub">Claim 3 middle boards in a row to win the match.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer" id="footerLabel">Welcome to Nested Tic-Tac-Toe. Good luck and have fun!</div>
+
+<!-- Rules Modal -->
+<div class="moverlay" id="rulesModal">
+  <div class="modal">
+    <h2>📋 Rules &amp; Help</h2>
+    <p>How to play:</p>
+    <ul>
+      <li>Click any unlocked small board to play your X or O.</li>
+      <li>Win that small board to claim it.</li>
+      <li>Win a row, column, or diagonal of small boards to claim the middle board.</li>
+      <li>Win 3 middle boards in a row (in the big board) to win the match.</li>
+    </ul>
+    <p>Drawn boards restart automatically. Undo &amp; Hints are limited to 3 per game. The timer can be paused or reset.</p>
+    <div class="mbtns"><button class="mbtn yes" onclick="closeModal('rulesModal')">Got it!</button></div>
+  </div>
+</div>
+
+<!-- Assist Modal -->
+<div class="moverlay" id="assistModal">
+  <div class="modal">
+    <h2>🤖 Live Assistance</h2>
+    <p>Would you like live assistance during the game?</p>
+    <p>It highlights the <strong>Best Move</strong> (cyan), warns of <strong>Blocks</strong> (orange), and shows a <strong>Strategy Tip</strong> in the sidebar.</p>
+    <div class="mbtns">
+      <button class="mbtn yes" onclick="setAssist(true)">Yes, enable it</button>
+      <button class="mbtn no" onclick="setAssist(false)">No thanks</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Constants ──────────────────────────────────────────────────────────────
+const X='X', O='O', EMPTY='';
+const WIN_LINES=[
+  [[0,0],[0,1],[0,2]],[[1,0],[1,1],[1,2]],[[2,0],[2,1],[2,2]],
+  [[0,0],[1,0],[2,0]],[[0,1],[1,1],[2,1]],[[0,2],[1,2],[2,2]],
+  [[0,0],[1,1],[2,2]],[[0,2],[1,1],[2,0]],
+];
+const C={
+  X:'#1f5bd7',O:'#d62f2f',gold:'#f2b01e',purple:'#8b5cf6',
+  cyan:'#06b6d4',orange:'#f59e0b',green:'#22a447',
+};
+
+// ── State ──────────────────────────────────────────────────────────────────
+let gs;
+
+function make6(){return arr(3,()=>arr(3,()=>arr(3,()=>arr(3,()=>arr(3,()=>arr(3,()=>EMPTY))))));}
+function make4(v=null){return arr(3,()=>arr(3,()=>arr(3,()=>arr(3,()=>v))));}
+function make2(v=null){return arr(3,()=>arr(3,()=>v));}
+function arr(n,fn){return Array.from({length:n},fn);}
+
+function initState(){
+  gs={
+    cells:make6(),smallOwner:make4(null),smallLine:make4(null),
+    middleOwner:make2(null),middleLine:make2(null),
+    bigOwner:null,bigLine:null,
+    current:X,gameOver:false,
+    mode:'2P',difficulty:'Intermediate',
+    soundOn:true,animationsOn:true,assistEnabled:true,
+    turnSeconds:20,turnRemaining:20,timerPaused:false,
+    hintsLeft:3,undosLeft:3,maxHints:3,maxUndos:3,
+    score:{X:0,O:0},streak:{X:0,O:0},
+    history:[],hoverBoard:null,flashMove:null,
+    assistCache:null,assistVersion:-1,stateVersion:0,
+  };
+}
+
+// ── Core Logic ─────────────────────────────────────────────────────────────
+const other=p=>p===X?O:X;
+
+function boardWinner(grid){
+  for(const line of WIN_LINES){
+    const v=line.map(([r,c])=>grid[r][c]);
+    if(v[0]!==null&&v[0]!==EMPTY&&v[0]===v[1]&&v[1]===v[2])return[v[0],line];
+  }return[null,null];
+}
+function boardWinnerE(grid){
+  for(const line of WIN_LINES){
+    const v=line.map(([r,c])=>grid[r][c]);
+    if(v[0]!==EMPTY&&v[0]===v[1]&&v[1]===v[2])return[v[0],line];
+  }return[null,null];
+}
+function boardFull(grid){return grid.every(r=>r.every(c=>c!==EMPTY));}
+
+function winCells(grid,player){
+  const out=[];
+  for(const line of WIN_LINES){
+    const v=line.map(([r,c])=>grid[r][c]);
+    if(v.filter(x=>x===player).length===2&&v.filter(x=>x===EMPTY).length===1)
+      out.push(line[v.indexOf(EMPTY)]);
+  }return out;
+}
+function lineCount(grid,player){
+  let t=0;
+  for(const line of WIN_LINES){const v=line.map(([r,c])=>grid[r][c]);
+    if(v.filter(x=>x===player).length===2&&v.filter(x=>x===EMPTY).length===1)t++;}
+  return t;
+}
+const bSmall=(r,c)=>r===1&&c===1?12:(r%2===0&&c%2===0?7:4);
+const bMid=(r,c)=>r===1&&c===1?26:(r%2===0&&c%2===0?14:6);
+const bBig=(r,c)=>r===1&&c===1?44:(r%2===0&&c%2===0?22:10);
+
+function legalMoves(){
+  const out=[];
+  if(gs.gameOver||gs.bigOwner!==null)return out;
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++){
+    if(gs.middleOwner[br][bc]!==null)continue;
+    for(let mr=0;mr<3;mr++)for(let mc=0;mc<3;mc++){
+      if(gs.smallOwner[br][bc][mr][mc]!==null)continue;
+      const g=gs.cells[br][bc][mr][mc];
+      for(let sr=0;sr<3;sr++)for(let sc=0;sc<3;sc++)
+        if(g[sr][sc]===EMPTY)out.push([br,bc,mr,mc,sr,sc]);
+    }
+  }return out;
+}
+function isLegal(br,bc,mr,mc,sr,sc){
+  if(gs.gameOver||gs.bigOwner!==null)return false;
+  if(gs.middleOwner[br][bc]!==null)return false;
+  if(gs.smallOwner[br][bc][mr][mc]!==null)return false;
+  return gs.cells[br][bc][mr][mc][sr][sc]===EMPTY;
+}
+
+const dc=x=>JSON.parse(JSON.stringify(x));
+
+function snap(){
+  return{cells:dc(gs.cells),smallOwner:dc(gs.smallOwner),smallLine:dc(gs.smallLine),
+    middleOwner:dc(gs.middleOwner),middleLine:dc(gs.middleLine),
+    bigOwner:gs.bigOwner,bigLine:dc(gs.bigLine),current:gs.current,
+    turnSeconds:gs.turnSeconds,turnRemaining:gs.turnRemaining,timerPaused:gs.timerPaused,
+    hintsLeft:gs.hintsLeft,undosLeft:gs.undosLeft,score:dc(gs.score),streak:dc(gs.streak),
+    gameOver:gs.gameOver,stateVersion:gs.stateVersion,
+    assistCache:dc(gs.assistCache),assistVersion:gs.assistVersion};
+}
+function restore(s){
+  cancelTimer();cancelAi();
+  Object.assign(gs,{cells:dc(s.cells),smallOwner:dc(s.smallOwner),smallLine:dc(s.smallLine),
+    middleOwner:dc(s.middleOwner),middleLine:dc(s.middleLine),
+    bigOwner:s.bigOwner,bigLine:dc(s.bigLine),current:s.current,
+    turnSeconds:s.turnSeconds,turnRemaining:s.turnRemaining,timerPaused:s.timerPaused,
+    hintsLeft:s.hintsLeft,undosLeft:s.undosLeft,score:dc(s.score),streak:dc(s.streak),
+    gameOver:s.gameOver,stateVersion:s.stateVersion,
+    assistCache:dc(s.assistCache),assistVersion:s.assistVersion});
+  refreshAll();
+  if(!gs.gameOver&&!gs.timerPaused)scheduleTimer();
+  maybeAi();
+}
+
+function resetSmall(br,bc,mr,mc){
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++)gs.cells[br][bc][mr][mc][r][c]=EMPTY;
+  gs.smallOwner[br][bc][mr][mc]=null;gs.smallLine[br][bc][mr][mc]=null;
+}
+function resetMiddle(br,bc){
+  for(let mr=0;mr<3;mr++)for(let mc=0;mc<3;mc++){
+    for(let r=0;r<3;r++)for(let c=0;c<3;c++)gs.cells[br][bc][mr][mc][r][c]=EMPTY;
+    gs.smallOwner[br][bc][mr][mc]=null;gs.smallLine[br][bc][mr][mc]=null;
+  }
+  gs.middleOwner[br][bc]=null;gs.middleLine[br][bc]=null;
+}
+function resetAll(){
+  gs.cells=make6();gs.smallOwner=make4(null);gs.smallLine=make4(null);
+  gs.middleOwner=make2(null);gs.middleLine=make2(null);
+  gs.bigOwner=null;gs.bigLine=null;gs.current=X;
+  gs.turnSeconds=timerVal();gs.turnRemaining=gs.turnSeconds;
+  gs.gameOver=false;gs.stateVersion++;
+}
+
+function makeMove(move){
+  if(!move||gs.gameOver)return false;
+  const[br,bc,mr,mc,sr,sc]=move;
+  if(!isLegal(br,bc,mr,mc,sr,sc))return false;
+  gs.history.push(snap());
+  if(gs.history.length>250)gs.history=gs.history.slice(-250);
+  cancelTimer();cancelAi();
+  gs.cells[br][bc][mr][mc][sr][sc]=gs.current;
+  gs.stateVersion++;
+  gs.flashMove=gs.animationsOn?move:null;
+
+  // small board
+  if(gs.smallOwner[br][bc][mr][mc]===null){
+    const[win,line]=boardWinnerE(gs.cells[br][bc][mr][mc]);
+    if(win){
+      gs.smallOwner[br][bc][mr][mc]=win;gs.smallLine[br][bc][mr][mc]=line;
+      for(let r=0;r<3;r++)for(let c=0;c<3;c++)gs.cells[br][bc][mr][mc][r][c]=EMPTY;
+      toast(`Small board won by ${win}.`);beep();
+    }else if(boardFull(gs.cells[br][bc][mr][mc])){
+      resetSmall(br,bc,mr,mc);toast('Small board drawn — restarting.');
+    }
+  }
+  // middle board
+  if(gs.middleOwner[br][bc]===null){
+    const mg=arr(3,(_,r)=>arr(3,(_,c)=>gs.smallOwner[br][bc][r][c]));
+    const[mw,ml]=boardWinner(mg);
+    if(mw){gs.middleOwner[br][bc]=mw;gs.middleLine[br][bc]=ml;toast(`Middle board claimed by ${mw}.`);beep();}
+    else if([0,1,2].every(r=>[0,1,2].every(c=>gs.smallOwner[br][bc][r][c]!==null))){
+      resetMiddle(br,bc);toast('Middle board drawn — restarting.');
+    }
+  }
+  // big board
+  if(gs.bigOwner===null){
+    const bg=arr(3,(_,r)=>arr(3,(_,c)=>gs.middleOwner[r][c]));
+    const[bw,bl]=boardWinner(bg);
+    if(bw){
+      gs.bigOwner=bw;gs.bigLine=bl;gs.gameOver=true;
+      gs.score[bw]++;gs.streak[bw]++;gs.streak[other(bw)]=0;
+      toast(`${bw} wins the match!`);beep();
+      refreshAll();cancelTimer();return true;
+    }
+    if([0,1,2].every(r=>[0,1,2].every(c=>gs.middleOwner[r][c]!==null))){
+      toast('Big board drawn — restarting the whole match.');beep();
+      resetAll();refreshAll();scheduleTimer();return true;
+    }
+  }
+  gs.current=other(gs.current);
+  gs.turnSeconds=timerVal();gs.turnRemaining=gs.turnSeconds;
+  gs.stateVersion++;
+  refreshAll();
+  if(!gs.gameOver){scheduleTimer();maybeAi();}
+  return true;
+}
+
+// ── AI ─────────────────────────────────────────────────────────────────────
+function chooseMove(player){
+  const legal=legalMoves();if(!legal.length)return null;
+  if(gs.difficulty==='Beginner')return aiBeg(legal);
+  if(gs.difficulty==='Intermediate')return aiInt(legal,player)||aiBeg(legal);
+  return aiAdv(legal,player);
+}
+function aiBeg(legal){
+  const cen=legal.filter(([,,,,sr,sc])=>sr===1&&sc===1);
+  const cor=legal.filter(([,,,,sr,sc])=>sr%2===0&&sc%2===0);
+  const p=cen.length?cen:cor.length?cor:legal;
+  return p[Math.floor(Math.random()*p.length)];
+}
+function aiInt(legal,player){
+  const opp=other(player),w=[],b=[];
+  for(const m of legal){
+    if(winsSmall(m,player))w.push([scoreM(m,player)+1000,m]);
+    if(blocksSmall(m,player,opp))b.push([scoreM(m,player)+900,m]);
+  }
+  if(w.length){w.sort((a,b)=>b[0]-a[0]);return w[0][1];}
+  if(b.length){b.sort((a,b)=>b[0]-a[0]);return b[0][1];}
+  const sc=legal.map(m=>[scoreM(m,player),m]);sc.sort((a,b)=>b[0]-a[0]);
+  return sc.length?sc[0][1]:legal[Math.floor(Math.random()*legal.length)];
+}
+function aiAdv(legal,player){
+  const sc=legal.map(m=>[scoreM(m,player),m]);sc.sort((a,b)=>b[0]-a[0]);
+  const best=sc[0][0];
+  const pool=sc.filter(([s])=>s>=best-18).map(([,m])=>m);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function winsSmall([br,bc,mr,mc,sr,sc],player){
+  const g=dc(gs.cells[br][bc][mr][mc]);g[sr][sc]=player;
+  return boardWinnerE(g)[0]===player;
+}
+function blocksSmall([br,bc,mr,mc,sr,sc],player,opp){
+  return winCells(gs.cells[br][bc][mr][mc],opp).some(([r,c])=>r===sr&&c===sc);
+}
+function midThreat(br,bc,player){
+  const g=arr(3,(_,r)=>arr(3,(_,c)=>gs.smallOwner[br][bc][r][c]));
+  for(const line of WIN_LINES){const v=line.map(([r,c])=>g[r][c]);
+    if(v.filter(x=>x===player).length===2&&v.filter(x=>x===null).length===1)return true;}
+  return false;
+}
+function bigThreat(player){
+  for(const line of WIN_LINES){const v=line.map(([r,c])=>gs.middleOwner[r][c]);
+    if(v.filter(x=>x===player).length===2&&v.filter(x=>x===null).length===1)return true;}
+  return false;
+}
+function scoreM([br,bc,mr,mc,sr,sc],player){
+  const opp=other(player);
+  let s=bBig(br,bc)+bMid(mr,mc)+bSmall(sr,sc);
+  const g=dc(gs.cells[br][bc][mr][mc]);
+  if(g[sr][sc]!==EMPTY)return-1e9;
+  g[sr][sc]=player;
+  if(boardWinnerE(g)[0]===player)s+=850;
+  s+=lineCount(g,player)*24;s-=lineCount(g,opp)*32;
+  if(blocksSmall([br,bc,mr,mc,sr,sc],player,opp))s+=920;
+  if(boardWinnerE(g)[0]===player){
+    const mg=arr(3,(_,r)=>arr(3,(_,c)=>gs.smallOwner[br][bc][r][c]));mg[mr][mc]=player;
+    if(boardWinner(mg)[0]===player)s+=5000;
+    s+=lineCount(mg,player)*180;
+    if(boardWinner(mg)[0]===player){
+      const bg=arr(3,(_,r)=>arr(3,(_,c)=>gs.middleOwner[r][c]));bg[br][bc]=player;
+      if(boardWinner(bg)[0]===player)s+=25000;
+      s+=lineCount(bg,player)*620;
+    }
+  }
+  if(br===1&&bc===1)s+=60;else if(br%2===0&&bc%2===0)s+=30;
+  if(mr===1&&mc===1)s+=24;else if(mr%2===0&&mc%2===0)s+=10;
+  if(sr===1&&sc===1)s+=18;else if(sr%2===0&&sc%2===0)s+=8;
+  if(midThreat(br,bc,opp))s+=90;
+  if(bigThreat(opp))s+=140;
+  return s;
+}
+function assist(player){
+  const legal=legalMoves();
+  if(!legal.length)return{bestMove:null,blockMove:null,tip:'No legal moves.',ghostMove:null,blockReason:''};
+  const opp=other(player);
+  let best=null,bScore=-1e12;
+  for(const m of legal){const s=scoreM(m,player);if(s>bScore){bScore=s;best=m;}}
+  let block=null,blScore=-1e12;
+  for(const m of legal){
+    const[br,bc,mr,mc,sr,sc]=m;
+    if(winCells(gs.cells[br][bc][mr][mc],opp).some(([r,c])=>r===sr&&c===sc)){
+      const s=scoreM(m,player)+1000;if(s>blScore){blScore=s;block=m;}
+    }
+  }
+  let tip=block?'Opponent has an immediate threat. Block it now.':
+    gs.difficulty==='Beginner'?'Center or corner cells are usually the safest simple choice.':
+    gs.difficulty==='Intermediate'?'Look for winning lines and boards that help you claim the middle.':
+    'Think ahead: aim for a move that helps both the small board and the larger board.';
+  return{bestMove:best,blockMove:block,ghostMove:block||best,tip,
+    blockReason:block?moveLabel(block):''};
+}
+function moveLabel(m){
+  if(!m)return'—';const[br,bc,mr,mc,sr,sc]=m;
+  return`board ${br+1},${bc+1} | small ${mr+1},${mc+1} | cell ${sr+1},${sc+1}`;
+}
+
+// ── AI timer ───────────────────────────────────────────────────────────────
+let aiT=null;
+function maybeAi(){
+  if(gs.gameOver||gs.mode!=='CPU'||gs.current!==O)return;
+  cancelAi();
+  aiT=setTimeout(()=>{aiT=null;
+    if(gs.gameOver||gs.mode!=='CPU'||gs.current!==O)return;
+    const m=chooseMove(O);if(m)makeMove(m);},320);
+}
+function cancelAi(){if(aiT!==null){clearTimeout(aiT);aiT=null;}}
+
+// ── Timer ──────────────────────────────────────────────────────────────────
+let timerIv=null;
+function timerVal(){const v=parseInt(document.getElementById('timerInput').value,10);return isNaN(v)?20:Math.max(5,Math.min(120,v));}
+function cancelTimer(){if(timerIv!==null){clearInterval(timerIv);timerIv=null;}}
+function scheduleTimer(){
+  cancelTimer();if(gs.gameOver||gs.timerPaused)return;
+  timerIv=setInterval(()=>{
+    if(gs.gameOver||gs.timerPaused){cancelTimer();return;}
+    gs.turnRemaining--;
+    if(gs.turnRemaining<=0){gs.turnRemaining=0;updatePanels();cancelTimer();onTimeout();}
+    else updatePanels();
+  },1000);
+}
+function onTimeout(){
+  if(gs.gameOver)return;
+  toast(`Time expired for ${gs.current}. Auto move played.`);beep();
+  const m=chooseMove(gs.current);if(m)makeMove(m);
+  else{gs.current=other(gs.current);gs.turnSeconds=timerVal();gs.turnRemaining=gs.turnSeconds;gs.stateVersion++;refreshAll();scheduleTimer();maybeAi();}
+}
+
+// ── Controls ───────────────────────────────────────────────────────────────
+function newMatch(){
+  cancelTimer();cancelAi();
+  gs.gameOver=false;gs.current=X;gs.turnSeconds=timerVal();gs.turnRemaining=gs.turnSeconds;
+  gs.timerPaused=false;gs.hintsLeft=gs.maxHints;gs.undosLeft=gs.maxUndos;
+  gs.cells=make6();gs.smallOwner=make4(null);gs.smallLine=make4(null);
+  gs.middleOwner=make2(null);gs.middleLine=make2(null);
+  gs.bigOwner=null;gs.bigLine=null;gs.history=[];gs.flashMove=null;
+  gs.assistCache=null;gs.stateVersion++;
+  toast('New match started.');refreshAll();scheduleTimer();maybeAi();
+}
+function setMode(m){gs.mode=m;refreshAll();maybeAi();}
+function setDifficulty(d){gs.difficulty=d;refreshAll();}
+function toggleSound(){gs.soundOn=!gs.soundOn;beep(true);refreshAll();}
+function toggleAnimations(){gs.animationsOn=!gs.animationsOn;refreshAll();}
+function togglePauseTimer(){if(gs.gameOver)return;gs.timerPaused=!gs.timerPaused;gs.timerPaused?cancelTimer():scheduleTimer();refreshAll();}
+function resetTurnTimer(){if(gs.gameOver)return;gs.turnSeconds=timerVal();gs.turnRemaining=gs.turnSeconds;gs.timerPaused=false;cancelTimer();scheduleTimer();refreshAll();}
+function undo(){
+  if(gs.undosLeft<=0||!gs.history.length){beep(false);return;}
+  cancelAi();cancelTimer();
+  const s=gs.history.pop();gs.undosLeft--;
+  restore(s);toast('Move undone.');
+}
+function hint(){
+  if(gs.gameOver||gs.hintsLeft<=0){beep(false);return;}
+  gs.hintsLeft--;gs.assistCache=assist(gs.current);gs.assistVersion=gs.stateVersion;
+  gs.flashMove=gs.assistCache?.ghostMove||null;
+  toast('Hint highlighted.');beep();refreshAll();
+  if(gs.animationsOn&&gs.flashMove)setTimeout(()=>{gs.flashMove=null;draw();},900);
+}
+function resetStreaks(){gs.score={X:0,O:0};gs.streak={X:0,O:0};toast('Streaks reset.');refreshAll();}
+function setAssist(v){gs.assistEnabled=v;closeModal('assistModal');refreshAll();}
+function showRules(){document.getElementById('rulesModal').classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastT=null;
+function toast(text){
+  document.getElementById('footerLabel').textContent=text;
+  if(toastT)clearTimeout(toastT);
+  toastT=setTimeout(()=>{document.getElementById('footerLabel').textContent='Welcome to Nested Tic-Tac-Toe. Good luck and have fun!';},2500);
+}
+
+// ── Sound ──────────────────────────────────────────────────────────────────
+let actx=null;
+function getActx(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();return actx;}
+function beep(soft=true){
+  if(!gs.soundOn)return;
+  try{const ctx=getActx(),o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);o.frequency.value=soft?500:260;
+    g.gain.setValueAtTime(.08,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);
+    o.start();o.stop(ctx.currentTime+.12);}catch(e){}
+}
+
+// ── Canvas / Rendering ─────────────────────────────────────────────────────
+const canvas=document.getElementById('board');
+const cx=canvas.getContext('2d');
+let BS,CELL,SMALL,MID;
+
+function computeSizes(){
+  const mw=window.innerWidth-400,mh=window.innerHeight-260;
+  const raw=Math.max(351,Math.min(mw,mh,560));
+  BS=Math.floor(raw/27)*27;CELL=BS/27;SMALL=CELL*3;MID=SMALL*3;
+  canvas.width=BS;canvas.height=BS;
+  canvas.style.width=BS+'px';canvas.style.height=BS+'px';
+}
+
+function draw(){
+  cx.clearRect(0,0,BS,BS);
+  drawBG();drawGrid();drawMarks();drawWins();drawHover();
+}
+
+function drawBG(){
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++){
+    if(gs.middleOwner[br][bc]!==null){
+      cx.fillStyle='#eef2f7';cx.fillRect(bc*MID+1,br*MID+1,MID-2,MID-2);
+    }else{
+      for(let mr=0;mr<3;mr++)for(let mc=0;mc<3;mc++){
+        if(gs.smallOwner[br][bc][mr][mc]!==null){
+          cx.fillStyle='#f7f8fb';cx.fillRect(bc*MID+mc*SMALL+1,br*MID+mr*SMALL+1,SMALL-2,SMALL-2);
+        }
+      }
+    }
+  }
+}
+
+function drawGrid(){
+  cx.strokeStyle='#111';cx.lineWidth=3;cx.strokeRect(1,1,BS-2,BS-2);
+  cx.strokeStyle='#111';cx.lineWidth=4;
+  for(let i=1;i<3;i++){const p=i*MID;
+    ln(p,0,p,BS);ln(0,p,BS,p);}
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++){
+    const x0=bc*MID,y0=br*MID,x1=x0+MID,y1=y0+MID;
+    cx.strokeStyle='#3f3f46';cx.lineWidth=2;
+    for(let i=1;i<3;i++){const px=x0+i*SMALL,py=y0+i*SMALL;ln(px,y0,px,y1);ln(x0,py,x1,py);}
+    for(let mr=0;mr<3;mr++)for(let mc=0;mc<3;mc++){
+      const sx=x0+mc*SMALL,sy=y0+mr*SMALL;
+      cx.strokeStyle='#cfd4dc';cx.lineWidth=1;
+      for(let i=1;i<3;i++){const px=sx+i*CELL,py=sy+i*CELL;
+        ln(px,sy,px,sy+SMALL);ln(sx,py,sx+SMALL,py);}
+    }
+  }
+}
+function ln(x1,y1,x2,y2){cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();}
+
+function drawMarks(){
+  const fs=Math.max(9,Math.floor(CELL*.9));
+  const bigFs=Math.max(16,Math.floor(SMALL*.44));
+  cx.textAlign='center';cx.textBaseline='middle';
+
+  // cell marks
+  cx.font=`bold ${fs}px 'Segoe UI',sans-serif`;
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++)
+    for(let mr=0;mr<3;mr++)for(let mc=0;mc<3;mc++){
+      if(gs.smallOwner[br][bc][mr][mc]!==null)continue;
+      for(let sr=0;sr<3;sr++)for(let sc=0;sc<3;sc++){
+        const v=gs.cells[br][bc][mr][mc][sr][sc];if(v===EMPTY)continue;
+        const x0=bc*MID+mc*SMALL+sc*CELL,y0=br*MID+mr*SMALL+sr*CELL;
+        cx.fillStyle=v===X?C.X:C.O;cx.fillText(v,x0+CELL/2,y0+CELL/2);
+      }
+    }
+
+  // small board owners
+  cx.font=`bold ${bigFs}px 'Segoe UI',sans-serif`;
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++)
+    for(let mr=0;mr<3;mr++)for(let mc=0;mc<3;mc++){
+      const w=gs.smallOwner[br][bc][mr][mc];if(!w)continue;
+      const x0=bc*MID+mc*SMALL,y0=br*MID+mr*SMALL;
+      cx.fillStyle='#f1f5f9';cx.fillRect(x0+1,y0+1,SMALL-2,SMALL-2);
+      cx.strokeStyle='#cbd5e1';cx.lineWidth=1;cx.strokeRect(x0+1,y0+1,SMALL-2,SMALL-2);
+      cx.fillStyle=w===X?C.X:C.O;cx.fillText(w,x0+SMALL/2,y0+SMALL/2);
+      cx.font=`bold ${Math.max(8,Math.floor(CELL*.5))}px sans-serif`;
+      cx.fillStyle=C.gold;cx.fillText('★',x0+SMALL-9,y0+9);
+      cx.font=`bold ${bigFs}px 'Segoe UI',sans-serif`;
+    }
+
+  // middle board owners
+  const mfs=Math.max(24,Math.floor(SMALL*.48));
+  cx.font=`bold ${mfs}px 'Segoe UI',sans-serif`;
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++){
+    const w=gs.middleOwner[br][bc];if(!w)continue;
+    const x0=bc*MID,y0=br*MID;
+    cx.fillStyle='#eef4ff';cx.fillRect(x0+2,y0+2,MID-4,MID-4);
+    cx.strokeStyle='#9ca3af';cx.lineWidth=1;cx.strokeRect(x0+2,y0+2,MID-4,MID-4);
+    cx.fillStyle=w===X?C.X:C.O;cx.fillText(w,x0+MID/2,y0+MID/2);
+    cx.font='bold 14px sans-serif';cx.fillStyle=C.gold;cx.fillText('★',x0+MID-13,y0+13);
+    cx.font=`bold ${mfs}px 'Segoe UI',sans-serif`;
+  }
+
+  // big win overlay
+  if(gs.bigOwner&&gs.bigLine){
+    const fs2=Math.max(15,Math.floor(CELL*.85));
+    const rx=BS*.15,ry=BS*.36,rw=BS*.7,rh=BS*.18;
+    cx.fillStyle='rgba(255,255,255,.96)';cx.fillRect(rx,ry,rw,rh);
+    cx.strokeStyle=C.green;cx.lineWidth=3;cx.strokeRect(rx,ry,rw,rh);
+    cx.fillStyle=C.green;cx.font=`bold ${fs2}px 'Segoe UI',sans-serif`;
+    cx.fillText(`${gs.bigOwner} WINS THE MATCH`,BS/2,BS*.43);
+    cx.fillStyle='#1f2937';cx.font=`${Math.max(8,Math.floor(CELL*.42))}px 'Segoe UI',sans-serif`;
+    cx.fillText('Press New Match to play again.',BS/2,BS*.50);
+  }
+}
+
+function drawWins(){
+  // small win lines
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++)
+    for(let mr=0;mr<3;mr++)for(let mc=0;mc<3;mc++){
+      const line=gs.smallLine[br][bc][mr][mc];if(!line)continue;
+      const x0=bc*MID+mc*SMALL,y0=br*MID+mr*SMALL;
+      const pts=line.map(([r,c])=>({x:x0+c*CELL+CELL/2,y:y0+r*CELL+CELL/2}));
+      drawLine(pts,C.gold,2.5);
+    }
+  // middle win lines
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++){
+    const line=gs.middleLine[br][bc];if(!line)continue;
+    const x0=bc*MID,y0=br*MID;
+    const pts=line.map(([r,c])=>({x:x0+c*SMALL+SMALL/2,y:y0+r*SMALL+SMALL/2}));
+    drawLine(pts,C.gold,4.5);
+  }
+  // big win line
+  if(gs.bigLine){
+    const pts=gs.bigLine.map(([r,c])=>({x:c*MID+MID/2,y:r*MID+MID/2}));
+    drawLine(pts,C.gold,6);
+  }
+}
+function drawLine(pts,col,lw){
+  cx.strokeStyle=col;cx.lineWidth=lw;cx.beginPath();cx.moveTo(pts[0].x,pts[0].y);
+  pts.slice(1).forEach(p=>cx.lineTo(p.x,p.y));cx.stroke();
+}
+
+function drawHover(){
+  // hover
+  if(gs.hoverBoard){
+    const[br,bc,mr,mc]=gs.hoverBoard;
+    if(gs.middleOwner[br][bc]===null&&gs.smallOwner[br][bc][mr][mc]===null){
+      const x0=bc*MID+mc*SMALL,y0=br*MID+mr*SMALL;
+      cx.strokeStyle=C.purple;cx.lineWidth=3;cx.strokeRect(x0+2,y0+2,SMALL-4,SMALL-4);
+    }
+  }
+  // assist ghost
+  if(gs.assistEnabled&&!gs.gameOver){
+    if(!gs.assistCache||gs.assistVersion!==gs.stateVersion){
+      gs.assistCache=assist(gs.current);gs.assistVersion=gs.stateVersion;
+    }
+    const ghost=gs.assistCache?.ghostMove;
+    if(ghost&&isLegal(...ghost)){
+      const[br,bc,mr,mc,sr,sc]=ghost;
+      const x0=bc*MID+mc*SMALL+sc*CELL,y0=br*MID+mr*SMALL+sr*CELL;
+      cx.fillStyle='#dff7fb';cx.fillRect(x0+1,y0+1,CELL-2,CELL-2);
+      cx.strokeStyle=C.cyan;cx.lineWidth=3;cx.strokeRect(x0+1,y0+1,CELL-2,CELL-2);
+      cx.strokeStyle=C.purple;cx.lineWidth=2;
+      cx.strokeRect(bc*MID+mc*SMALL+2,br*MID+mr*SMALL+2,SMALL-4,SMALL-4);
+    }
+    const block=gs.assistCache?.blockMove;
+    if(block&&block!==ghost&&isLegal(...block)){
+      const[br,bc,mr,mc,sr,sc]=block;
+      const x0=bc*MID+mc*SMALL+sc*CELL,y0=br*MID+mr*SMALL+sr*CELL;
+      cx.strokeStyle=C.orange;cx.lineWidth=3;cx.strokeRect(x0+1,y0+1,CELL-2,CELL-2);
+    }
+  }
+  // flash
+  if(gs.flashMove&&gs.animationsOn){
+    const[br,bc,mr,mc,sr,sc]=gs.flashMove;
+    const x0=bc*MID+mc*SMALL+sc*CELL,y0=br*MID+mr*SMALL+sr*CELL;
+    cx.strokeStyle='#0ea5e9';cx.lineWidth=3;cx.strokeRect(x0+1,y0+1,CELL-2,CELL-2);
+  }
+}
+
+// ── Panels ─────────────────────────────────────────────────────────────────
+function updatePanels(){
+  const is2p=gs.mode==='2P';
+  $('xSub').textContent='(You)';
+  $('oTitle').textContent='Player O';
+  $('oSub').textContent=is2p?'(Player 2)':`(Computer — ${gs.difficulty})`;
+  const badge=$('turnBadge');
+  if(gs.gameOver&&gs.bigOwner){
+    badge.textContent=`${gs.bigOwner} WINS THE MATCH!`;badge.style.background='#22a447';
+    $('turnMsg').textContent='Press New Match to start a fresh game.';
+  }else{
+    badge.style.background=gs.current===X?'#1f5bd7':'#d62f2f';
+    badge.textContent=gs.current===X?'YOUR TURN':(is2p?'PLAYER O TURN':'COMPUTER THINKING');
+    $('turnMsg').textContent='Choose any unlocked small board to play';
+  }
+  if(!gs.assistCache||gs.assistVersion!==gs.stateVersion){
+    gs.assistCache=assist(gs.current);gs.assistVersion=gs.stateVersion;
+  }
+  const info=gs.assistCache||{};
+  $('bestLbl').textContent=info.bestMove?`Best Move: ${moveLabel(info.bestMove)}`:'Best Move: —';
+  $('blockLbl').textContent=info.blockMove?`Block Here!: ${info.blockReason||moveLabel(info.blockMove)}`:'Block Here!: No immediate threat.';
+  $('tipLbl').textContent=`Strategy Tip: ${info.tip||'Play the strongest legal move.'}`;
+
+  let sc2=0,mc2=0;
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++){
+    if(gs.middleOwner[br][bc]!==null)mc2++;
+    for(let mr=0;mr<3;mr++)for(let mc=0;mc<3;mc++)if(gs.smallOwner[br][bc][mr][mc]!==null)sc2++;
+  }
+  $('smallClaims').textContent=`Small: ${sc2} / 81`;
+  $('middleClaims').textContent=`Middle: ${mc2} / 9`;
+  $('bigClaim').textContent=`Big: ${gs.bigOwner?1:0} / 1`;
+  $('progSmall').textContent=`Small Games: ${sc2} / 81`;
+  $('progMiddle').textContent=`Middle Games: ${mc2} / 9`;
+  $('progBig').textContent=`Big Game: ${gs.bigOwner?1:0} / 1`;
+  $('statusTurn').textContent=`Turn: ${gs.current}`;
+  $('statusTimer').textContent=`Timer: ${gs.turnRemaining}s / ${gs.turnSeconds}s`;
+  $('statusCounts').textContent=`Hints: ${gs.hintsLeft}   Undos: ${gs.undosLeft}`;
+  $('statusScore').textContent=`Score — X: ${gs.score.X}   O: ${gs.score.O}`;
+  $('statusMode').textContent=`Mode: ${is2p?'2 Players':'Vs Computer'} | ${gs.difficulty}`;
+  $('streakX').textContent=`X Streak: ${gs.streak.X}`;
+  $('streakO').textContent=`O Streak: ${gs.streak.O}`;
+  cls('mode2p','2P');cls('modeCpu','CPU');
+  cls2('diffBeg','Beginner');cls2('diffInt','Intermediate');cls2('diffAdv','Advanced');
+  $('soundBtn').textContent=`Sound: ${gs.soundOn?'ON':'OFF'}`;
+  $('animBtn').textContent=`Animations: ${gs.animationsOn?'ON':'OFF'}`;
+  $('pauseBtn').textContent=gs.timerPaused?'Resume Timer':'Pause Timer';
+  $('undoBtn').textContent=`Undo (${gs.undosLeft} left)`;
+  $('hintBtn').textContent=`Hint (${gs.hintsLeft} left)`;
+  $('undoBtn').disabled=gs.undosLeft<=0;
+  $('hintBtn').disabled=gs.hintsLeft<=0;
+}
+function $(id){return document.getElementById(id);}
+function cls(id,mode){$(id).className='btn'+(gs.mode===mode?' active':'');}
+function cls2(id,diff){$(id).className='btn'+(gs.difficulty===diff?' active':'');}
+function refreshAll(){updatePanels();draw();}
+
+// ── Mouse ──────────────────────────────────────────────────────────────────
+function xyToMove(x,y){
+  if(x<0||y<0||x>=BS||y>=BS)return null;
+  const br=Math.floor(y/MID),bc=Math.floor(x/MID);
+  const wy=y%MID,wx=x%MID;
+  const mr=Math.floor(wy/SMALL),mc=Math.floor(wx/SMALL);
+  const sy=wy%SMALL,sx=wx%SMALL;
+  return[br,bc,mr,mc,Math.floor(sy/CELL),Math.floor(sx/CELL)];
+}
+function getXY(e){
+  const r=canvas.getBoundingClientRect();
+  const scaleX=BS/r.width,scaleY=BS/r.height;
+  const px=e.touches?e.touches[0].clientX:e.clientX;
+  const py=e.touches?e.touches[0].clientY:e.clientY;
+  return{x:(px-r.left)*scaleX,y:(py-r.top)*scaleY};
+}
+canvas.addEventListener('click',e=>{
+  if(gs.gameOver)return;
+  if(gs.mode==='CPU'&&gs.current===O)return;
+  const{x,y}=getXY(e);
+  const move=xyToMove(x,y);if(!move)return;
+  if(!isLegal(...move)){toast('That board is locked or that cell is already taken.');beep(false);return;}
+  makeMove(move);
+});
+canvas.addEventListener('touchstart',e=>{e.preventDefault();
+  if(gs.gameOver)return;
+  if(gs.mode==='CPU'&&gs.current===O)return;
+  const{x,y}=getXY(e);const move=xyToMove(x,y);if(!move)return;
+  if(!isLegal(...move)){toast('That board is locked or that cell is already taken.');return;}
+  makeMove(move);},{passive:false});
+canvas.addEventListener('mousemove',e=>{
+  const{x,y}=getXY(e);const move=xyToMove(x,y);
+  gs.hoverBoard=(move&&isLegal(...move))?move.slice(0,4):null;draw();});
+canvas.addEventListener('mouseleave',()=>{gs.hoverBoard=null;draw();});
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+computeSizes();
+initState();
+refreshAll();
+scheduleTimer();
+setTimeout(()=>document.getElementById('rulesModal').classList.add('show'),350);
+window.addEventListener('resize',()=>{computeSizes();draw();});
+</script>
+</body>
+</html>
